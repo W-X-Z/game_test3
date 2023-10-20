@@ -1,7 +1,7 @@
 let config = {
     type: Phaser.AUTO,
-    width: 400,
-    height: 200,
+    width: 320,
+    height: 320,
     backgroundColor: '#333333',
     physics: {
         default: 'matter',
