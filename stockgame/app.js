@@ -98,14 +98,6 @@ function handleMerge(icon1, icon2) {
         this.score += iconScores[nextIconKey];
         this.scoreText.setText('Score: ' + this.score); // Update the score display
     }
-
-    // Check defeat condition for the merged icon
-    if (icon1.isDropping && icon1.y <= 20) {
-        endGame('defeat');
-    }
-    if (icon2.isDropping && icon2.y <= 20) {
-        endGame('defeat');
-    }
 }
 
 function create() {
@@ -160,6 +152,11 @@ function update() {
                 handleMerge.call(this, icons[i], icons[j]);
                 break; // Break out of the inner loop if a merge is found to prevent handling the same pair multiple times in one frame
             }
+        }
+        // Check for defeat condition
+        if (!icons[i].isDropping && icons[i].y <= 20) {
+            endGame('defeat');
+            return; // Exit the update function once a defeat is detected
         }
     }
 }
