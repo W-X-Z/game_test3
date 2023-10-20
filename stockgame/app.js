@@ -154,7 +154,7 @@ function update() {
             }
         }
         // Check for defeat condition
-        if (!icons[i].isDropping && icons[i].y <= 100) {
+        if (!icons[i].isDropping && icons[i].y <= 40) {
             endGame('defeat');
             return; // Exit the update function once a defeat is detected
         }
