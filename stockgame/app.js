@@ -1,6 +1,7 @@
+
 const CONSTANTS = {
     ORIGINAL_WIDTH: 540,
-    ORIGINAL_HEIGHT: 160,
+    ORIGINAL_HEIGHT: 240,
     CREATE_HEIGHT: 40,
     DEFEAT_HEIGHT: 120,
     mergeMap: {
@@ -81,9 +82,17 @@ function preload() {
 }
 
 function create() {
+
+    let graphics = this.add.graphics();
+    graphics.lineStyle(2, 0xff0000);  // 2px wide line, red color
+    graphics.moveTo(0, CONSTANTS.DEFEAT_HEIGHT * GLOBAL_SCALE);
+    graphics.lineTo(this.game.config.width, CONSTANTS.DEFEAT_HEIGHT * GLOBAL_SCALE);
+    graphics.strokePath();
+
     this.matter.world.setBounds(0, 0, this.game.config.width, this.game.config.height);
     icons = [];
     spawnIcon(this);
+    
     this.input.on('pointerdown', (pointer) => {
         if (currentIcon) {
             let clampedX = clamp(pointer.x, currentIcon.radius, this.game.config.width - currentIcon.radius);
@@ -106,7 +115,6 @@ function create() {
             currentIcon.setStatic(false);
             Phaser.Physics.Matter.Matter.Body.setVelocity(currentIcon.body, {x: 0, y: 20*GLOBAL_SCALE});
             currentIcon.setAngularVelocity(0);
-            currentIcon.isDropping = true; 
             currentIcon = null;
             this.time.delayedCall(1000, spawnIcon, [this], this);
         }
@@ -117,6 +125,8 @@ function create() {
         let icon2 = bodyB.gameObject;
         if (icon1 && icon2 && icons.includes(icon1) && icons.includes(icon2) && icon1 !== icon2) {
             handleMerge.call(this, icon1, icon2);
+            icon1.isDropping = false;
+            icon2.isDropping = false;
         }
     });
 
@@ -125,11 +135,14 @@ function create() {
 }
 
 function update() {
-    console.log('DF_h:' + CONSTANTS.DEFEAT_HEIGHT, 'CR_h:' + CONSTANTS.CREATE_HEIGHT)
     for (let i = 0; i < icons.length; i++) {
+        console.log(icons[i].isDropping)
+        console.log(CONSTANTS.DEFEAT_HEIGHT * GLOBAL_SCALE)
         // Check for defeat condition
-        if (!icons[i].isStatic && !icons[i].isDropping && icons[i].y <= CONSTANTS.DEFEAT_HEIGHT * GLOBAL_SCALE) {
-            endGame('defeat');
+        if (!icons[i].isDropping && icons[i].y <= CONSTANTS.DEFEAT_HEIGHT * GLOBAL_SCALE) {
+            setTimeout(() => {
+                endGame('defeat');
+            }, 2000);  // 2000 milliseconds = 2 seconds delay
             return; // Exit the update function once a defeat is detected
         }
     }
@@ -146,7 +159,8 @@ function handleMerge(icon1, icon2) {
             newIcon.setScale(0.5 * GLOBAL_SCALE, 0.5 * GLOBAL_SCALE);
             let scaledRadius = (newIcon.width * newIcon.scaleX) / 2;
             newIcon.setCircle(scaledRadius);
-            newIcon.setStatic(false); 
+            newIcon.setStatic(false);
+            newIcon.isDropping = false;
             icons.push(newIcon);
             
             // Check for the win condition
@@ -182,15 +196,14 @@ function createIcon(scene, iconKey) {
     let radius = (icon.width * icon.scaleX) / 2;
     icon.setCircle(radius);
     icon.setStatic(true);
-    icon.isDropping = false;
+    icon.isDropping = true;
     icon.radius = radius;  // Store the radius in the icon object for easy access later
     return icon;
 }
 
 function endGame(result) {
     if(result === 'defeat') {
-        // Logic for when the game ends in defeat
-        alert('Game Over!'); // Replace with a more stylish game-over screen if desired
+        alert('Game Over!');
     } else if(result === 'win') {
         // Logic for when the game ends in victory
         alert('You Win!'); // Replace with a more stylish victory screen if desired
