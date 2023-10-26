@@ -1,7 +1,6 @@
-
 const CONSTANTS = {
     ORIGINAL_WIDTH: 540,
-    ORIGINAL_HEIGHT: 240,
+    ORIGINAL_HEIGHT: 540,
     CREATE_HEIGHT: 40,
     DEFEAT_HEIGHT: 120,
     mergeMap: {
@@ -66,6 +65,7 @@ let game = new Phaser.Game(CONFIG);
 let currentIcon;
 let icons = [];
 let GLOBAL_SCALE = Math.min(window.innerWidth / CONSTANTS.ORIGINAL_WIDTH, window.innerHeight / CONSTANTS.ORIGINAL_HEIGHT);
+let isGameActive = true;
 
 function preload() {
     this.load.image('엔에이치', 'stockgame/01.png');
@@ -79,6 +79,10 @@ function preload() {
     this.load.image('마이크로소프트', 'stockgame/09.png');
     this.load.image('애플', 'stockgame/10.png');
     this.load.image('나무', 'stockgame/11.png');
+    this.load.image('popupBg', 'stockgame/popupBg.png');
+    this.load.image('shareButton', 'stockgame/shareButton.png');
+    this.load.image('restartButton', 'stockgame/restartButton.png');
+
 }
 
 function create() {
@@ -135,14 +139,19 @@ function create() {
 }
 
 function update() {
+    if (!isGameActive) return;
+    
+    if (this.score >= 10) {
+        endGame(this, 'defeat');
+        return;
+    }
+
     for (let i = 0; i < icons.length; i++) {
-        console.log(icons[i].isDropping)
-        console.log(CONSTANTS.DEFEAT_HEIGHT * GLOBAL_SCALE)
         // Check for defeat condition
         if (!icons[i].isDropping && icons[i].y <= CONSTANTS.DEFEAT_HEIGHT * GLOBAL_SCALE) {
             setTimeout(() => {
-                endGame('defeat');
-            }, 2000);  // 2000 milliseconds = 2 seconds delay
+                endGame(this, 'defeat');
+            }, 200);  // 2000 milliseconds = 2 seconds delay
             return; // Exit the update function once a defeat is detected
         }
     }
@@ -162,13 +171,6 @@ function handleMerge(icon1, icon2) {
             newIcon.setStatic(false);
             newIcon.isDropping = false;
             icons.push(newIcon);
-            
-            // Check for the win condition
-            if (nextIconKey === '나무') {
-                setTimeout(() => {
-                    endGame('win');
-                }, 200);  // 2000 milliseconds = 2 seconds delay
-            }
         }
 
         // Destroy the merged icons
@@ -201,15 +203,56 @@ function createIcon(scene, iconKey) {
     return icon;
 }
 
-function endGame(result) {
-    if(result === 'defeat') {
-        alert('Game Over!');
-    } else if(result === 'win') {
-        // Logic for when the game ends in victory
-        alert('You Win!'); // Replace with a more stylish victory screen if desired
-    }
+function endGame(scene, result) {
+    // Pause the game logic
+    isGameActive = false;
 
-    // You might want to restart the game or navigate to a different screen here
-    // For now, let's just reload the game:
-    location.reload();
+
+    if(result === 'defeat') {
+        showPopup(scene, 'GAME OVER\nScore: ' + scene.score);
+    }
+}
+
+function showPopup(scene, message) {
+
+    // Create the popup background
+    let popupBg = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2, 'popupBg');
+
+    // Add the message text
+    let messageText = scene.add.text(scene.game.config.width / 2, scene.game.config.height / 2 - 20, message, {
+        fontSize: '32px',
+        fill: '#fff',
+        align: 'center'
+    }).setOrigin(0.5);
+    
+    let restartBtn = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2 + 100, 'restartButton').setInteractive();
+    restartBtn.on('pointerdown', () => {
+        location.reload();  // Reload the page when the button is clicked
+    });
+
+    // Add the share button
+    let shareBtn = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2 + 60, 'shareButton').setInteractive();
+    shareBtn.on('pointerdown', () => {
+        // Logic to share the game score. This will depend on how you want to implement the sharing feature.
+        console.log('Share button clicked!');
+        shareScore(scene.score);
+    });
+
+    // Create a container to manage the popup components
+    let popupContainer = scene.add.container(0, 0, [popupBg, messageText, shareBtn, restartBtn]);
+    popupContainer.setDepth(5); 
+}
+
+function shareScore(score) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'My Game Score',
+            text: `I scored ${score} points in the game! Try to beat my score on [Your Game Name].`,
+            url: window.location.href  // URL of your game
+        })
+        .then(() => console.log('Successful share'))
+        .catch((error) => console.log('Error sharing:', error));
+    } else {
+        console.warn("Web Share API is not supported in this browser.");
+    }
 }
