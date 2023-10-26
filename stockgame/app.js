@@ -1,6 +1,6 @@
 const CONSTANTS = {
     ORIGINAL_WIDTH: 540,
-    ORIGINAL_HEIGHT: 540,
+    ORIGINAL_HEIGHT: 800,
     CREATE_HEIGHT: 40,
     DEFEAT_HEIGHT: 120,
     mergeMap: {
@@ -141,7 +141,7 @@ function create() {
 function update() {
     if (!isGameActive) return;
     
-    if (this.score >= 10) {
+    if (this.score >= 1) {
         endGame(this, 'defeat');
         return;
     }
@@ -209,32 +209,42 @@ function endGame(scene, result) {
 
 
     if(result === 'defeat') {
-        showPopup(scene, 'GAME OVER\nScore: ' + scene.score);
+        showPopup(scene, '내 기록: ' + scene.score);
     }
 }
 
 function showPopup(scene, message) {
-
     // Create the popup background
     let popupBg = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2, 'popupBg').setScale(GLOBAL_SCALE);
 
     // Add the message text
     let messageText = scene.add.text(scene.game.config.width / 2, scene.game.config.height / 2 - 20 * GLOBAL_SCALE, message, {
-        fontSize: (32 * GLOBAL_SCALE) + 'px',
+        fontSize: (40 * GLOBAL_SCALE) + 'px',
         fill: '#fff',
         align: 'center'
     }).setOrigin(0.5);
     
-    // Add a restart button with scaled position and size (if you have one)
-    let restartBtn = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2 + 120 * GLOBAL_SCALE, 'restartButton').setInteractive().setScale(GLOBAL_SCALE);
-    restartBtn.on('pointerdown', () => {
-        location.reload();
-    });
+    // Define the gap between buttons
+    let buttonGap = 20 * GLOBAL_SCALE;
 
-    // Add the share button with scaled position and size
-    let shareBtn = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2 + 60 * GLOBAL_SCALE, 'shareButton').setInteractive().setScale(GLOBAL_SCALE);
+    // Create the share button and get its width
+    let shareBtn = scene.add.image(0, 0, 'shareButton').setScale(GLOBAL_SCALE);
+    let shareBtnWidth = shareBtn.width * GLOBAL_SCALE;
+    shareBtn.x = scene.game.config.width / 2 - shareBtnWidth / 2 - buttonGap;
+    shareBtn.y = scene.game.config.height / 2 + 120 * GLOBAL_SCALE;
+    shareBtn.setInteractive();
     shareBtn.on('pointerdown', () => {
         shareScore(scene.score);
+    });
+
+    // Create the restart button and get its width
+    let restartBtn = scene.add.image(0, 0, 'restartButton').setScale(GLOBAL_SCALE);
+    let restartBtnWidth = restartBtn.width * GLOBAL_SCALE;
+    restartBtn.x = scene.game.config.width / 2 + restartBtnWidth / 2 + buttonGap;
+    restartBtn.y = scene.game.config.height / 2 + 120 * GLOBAL_SCALE;
+    restartBtn.setInteractive();
+    restartBtn.on('pointerdown', () => {
+        location.reload();
     });
 
     // Create a container to manage the popup components
@@ -245,13 +255,15 @@ function showPopup(scene, message) {
 function shareScore(score) {
     if (navigator.share) {
         navigator.share({
-            title: 'My Game Score',
-            text: `I scored ${score} points in the game! Try to beat my score on [Your Game Name].`,
+            title: '나무 2048',
+            text: `내 기록: ${score}`,
             url: window.location.href  // URL of your game
         })
         .then(() => console.log('Successful share'))
         .catch((error) => console.log('Error sharing:', error));
     } else {
-        console.warn("Web Share API is not supported in this browser.");
+        // Fallback for browsers that don't support Web Share API
+        let shareMessage = `나무 2048 내 기록: ${score} ${window.location.href}`;
+        alert("Web Share API is not supported in this browser.\n\n" + "You can copy the following message to share:\n\n" + shareMessage);
     }
 }
