@@ -141,11 +141,6 @@ function create() {
 function update() {
     if (!isGameActive) return;
     
-    if (this.score >= 1) {
-        endGame(this, 'defeat');
-        return;
-    }
-
     for (let i = 0; i < icons.length; i++) {
         // Check for defeat condition
         if (!icons[i].isDropping && icons[i].y <= CONSTANTS.DEFEAT_HEIGHT * GLOBAL_SCALE) {
