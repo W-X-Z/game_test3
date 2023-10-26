@@ -216,25 +216,24 @@ function endGame(scene, result) {
 function showPopup(scene, message) {
 
     // Create the popup background
-    let popupBg = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2, 'popupBg');
+    let popupBg = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2, 'popupBg').setScale(GLOBAL_SCALE);
 
     // Add the message text
-    let messageText = scene.add.text(scene.game.config.width / 2, scene.game.config.height / 2 - 20, message, {
-        fontSize: '32px',
+    let messageText = scene.add.text(scene.game.config.width / 2, scene.game.config.height / 2 - 20 * GLOBAL_SCALE, message, {
+        fontSize: (32 * GLOBAL_SCALE) + 'px',
         fill: '#fff',
         align: 'center'
     }).setOrigin(0.5);
     
-    let restartBtn = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2 + 100, 'restartButton').setInteractive();
+    // Add a restart button with scaled position and size (if you have one)
+    let restartBtn = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2 + 120 * GLOBAL_SCALE, 'restartButton').setInteractive().setScale(GLOBAL_SCALE);
     restartBtn.on('pointerdown', () => {
-        location.reload();  // Reload the page when the button is clicked
+        location.reload();
     });
 
-    // Add the share button
-    let shareBtn = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2 + 60, 'shareButton').setInteractive();
+    // Add the share button with scaled position and size
+    let shareBtn = scene.add.image(scene.game.config.width / 2, scene.game.config.height / 2 + 60 * GLOBAL_SCALE, 'shareButton').setInteractive().setScale(GLOBAL_SCALE);
     shareBtn.on('pointerdown', () => {
-        // Logic to share the game score. This will depend on how you want to implement the sharing feature.
-        console.log('Share button clicked!');
         shareScore(scene.score);
     });
 
