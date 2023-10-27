@@ -40,7 +40,7 @@ const CONFIG = {
         default: 'matter',
         matter: {
             gravity: { y: 1 },
-            debug: false
+            debug: true
         }
     },
     scene: {
@@ -94,6 +94,7 @@ function create() {
     graphics.strokePath();
 
     this.matter.world.setBounds(0, 0, this.game.config.width, this.game.config.height);
+
     icons = [];
     spawnIcon(this);
     
@@ -124,14 +125,51 @@ function create() {
         }
     });
 
-    this.matter.world.on('collisionstart', (event, bodyA, bodyB) => {
+    const handleCollision = (event, bodyA, bodyB) => {
         let icon1 = bodyA.gameObject;
         let icon2 = bodyB.gameObject;
-        if (icon1 && icon2 && icons.includes(icon1) && icons.includes(icon2) && icon1 !== icon2) {
-            handleMerge.call(this, icon1, icon2);
-            icon1.isDropping = false;
-            icon2.isDropping = false;
+    
+        // Check if both objects involved in the collision are valid icons
+        if (icon1 && icon2 && icon1 !== icon2) {
+            console.log("Collision detected between icons:", icon1.texture.key, "and", icon2.texture.key);
+    
+            // Call the handleMerge function only if both icons are part of the icons array
+            if (icons.includes(icon1) && icons.includes(icon2)) {
+                handleMerge.call(this, icon1, icon2);
+                icon1.isDropping = false;
+                icon2.isDropping = false;
+            }
         }
+    };
+
+    this.matter.world.on('collisionstart', handleCollision);
+    this.matter.world.on('collisionactive', handleCollision);
+
+    const RATIO = 0.9; // Adjust this value as necessary. Values less than 1 will make detection less sensitive.
+
+    const checkOverlaps = () => {
+        for (let i = 0; i < icons.length; i++) {
+            for (let j = i + 1; j < icons.length; j++) {
+                const icon1 = icons[i];
+                const icon2 = icons[j];
+                const distance = Phaser.Math.Distance.Between(icon1.x, icon1.y, icon2.x, icon2.y);
+    
+                if (distance < RATIO * (icon1.width/2 + icon2.width/2)) { 
+                    console.log(`Overlap detected between icons: ${icon1.texture.key} and ${icon2.texture.key}`);
+                    handleMerge.call(this, icon1, icon2);
+                    icon1.isDropping = false;
+                    icon2.isDropping = false;
+                }
+            }
+        }
+    };
+    
+    // Call this function every X milliseconds
+    this.time.addEvent({
+        delay: 100, // time in ms you want to wait before the next check
+        callback: checkOverlaps,
+        callbackScope: this,
+        loop: true
     });
 
     this.score = 0;
@@ -156,10 +194,11 @@ function handleMerge(icon1, icon2) {
 
     // Check if the two icons are of the same type
     if (icon1.texture.key === icon2.texture.key) {
+
         // Get the key for the next icon from the mergeMap
         let nextIconKey = CONSTANTS.mergeMap[icon1.texture.key];
         if (nextIconKey) {
-            let newIcon = this.matter.add.image((icon1.x + icon2.x) / 2, (icon1.y + icon2.y) / 2, nextIconKey, null, { restitution: 0.5, friction: 0.05 });
+            let newIcon = this.matter.add.image((icon1.x + icon2.x) / 2, (icon1.y + icon2.y) / 2, nextIconKey, null, { restitution: 1, friction: 0 });
             newIcon.setScale(0.5 * GLOBAL_SCALE, 0.5 * GLOBAL_SCALE);
             let scaledRadius = (newIcon.width * newIcon.scaleX) / 2;
             newIcon.setCircle(scaledRadius);
